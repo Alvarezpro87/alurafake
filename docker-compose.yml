@@ -1,0 +1,27 @@
+services:
+  mysql:
+    container_name: mysql-alurafake
+    image: mysql:8.0.36
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: senha123
+      MYSQL_DATABASE: alurafake
+      MYSQL_USER: alurafake
+      MYSQL_PASSWORD: alurafakepwd
+
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+
+    volumes:
+      - db-data:/var/lib/mysql
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-ualurafake", "-palurafakepwd"]
+      interval: 10s
+      retries: 5
+
+volumes:
+  db-data:
