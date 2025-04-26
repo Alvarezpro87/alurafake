@@ -12,7 +12,7 @@ public class Option {
     private Long id;
 
     @Size(min = 4, max = 80)
-    @Column(nullable = false, length = 80)
+    @Column(name = "option_text", nullable = false, length = 80)
     private String option;
 
     private boolean isCorrect;
