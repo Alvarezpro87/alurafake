@@ -8,15 +8,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.jdbc.Sql;
-import org.springframework.transaction.annotation.Transactional;   // <- de Spring
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;  // <- MUDOU
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional                                             // rollback após o teste
+@Transactional
 @Sql(scripts = { "/clean.sshouldReturn201WhenOpenTextIsCreatedql", "/insert-course.sql" },                       // popula antes do teste
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class TaskControllerTest {
