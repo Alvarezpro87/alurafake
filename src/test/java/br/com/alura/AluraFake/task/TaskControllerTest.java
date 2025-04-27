@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-@Sql(scripts = { "/clean.sshouldReturn201WhenOpenTextIsCreatedql", "/insert-course.sql" },                       // popula antes do teste
+@Sql(scripts = { "/clean.sql", "/insert-course.sql" },
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class TaskControllerTest {
 

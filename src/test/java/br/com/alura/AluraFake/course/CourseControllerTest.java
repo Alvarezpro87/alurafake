@@ -4,6 +4,8 @@ import br.com.alura.AluraFake.user.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -15,17 +17,21 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(CourseController.class)
+@WebMvcTest(
+        controllers = CourseController.class,
+        excludeAutoConfiguration = {
+                SecurityAutoConfiguration.class,
+                SecurityFilterAutoConfiguration.class   // << desliga o filtro
+        }
+)
 class CourseControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-    @MockBean
-    private UserRepository userRepository;
-    @MockBean
-    private CourseRepository courseRepository;
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired MockMvc          mockMvc;
+
+    @MockBean UserRepository    userRepository;
+    @MockBean CourseRepository  courseRepository;
+    @MockBean CourseService    courseService;
+    @Autowired ObjectMapper     objectMapper;
 
     @Test
     void newCourseDTO__should_return_bad_request_when_email_is_invalid() throws Exception {
