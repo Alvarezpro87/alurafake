@@ -18,4 +18,10 @@ public class ValidationExceptionHandler {
         List<ErrorItemDTO> errors = ex.getBindingResult().getFieldErrors().stream().map(ErrorItemDTO::new).toList();
         return ResponseEntity.badRequest().body(errors);
     }
+    @ExceptionHandler(BusinessException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<List<ErrorItemDTO>> handleBusiness(BusinessException ex) {
+        ErrorItemDTO dto = new ErrorItemDTO("businessRule", ex.getMessage());
+        return ResponseEntity.badRequest().body(List.of(dto));
+    }
 }
