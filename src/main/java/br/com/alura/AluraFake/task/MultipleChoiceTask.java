@@ -3,12 +3,8 @@ package br.com.alura.AluraFake.task;
 import br.com.alura.AluraFake.course.Course;
 import jakarta.persistence.*;
 
-
 import java.util.ArrayList;
 import java.util.List;
-
-
-
 
 @Entity
 @DiscriminatorValue("MULTIPLE_CHOICE")

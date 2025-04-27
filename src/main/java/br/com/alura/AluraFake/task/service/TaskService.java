@@ -1,12 +1,17 @@
-package br.com.alura.AluraFake.task;
+package br.com.alura.AluraFake.task.service;
 
 import br.com.alura.AluraFake.course.Course;
 import br.com.alura.AluraFake.course.CourseRepository;
 import br.com.alura.AluraFake.course.Status;
+import br.com.alura.AluraFake.task.MultipleChoiceTask;
+import br.com.alura.AluraFake.task.OpenTextTask;
+import br.com.alura.AluraFake.task.Option;
+import br.com.alura.AluraFake.task.SingleChoiceTask;
 import br.com.alura.AluraFake.task.dto.NewMultipleChoiceTaskDTO;
 import br.com.alura.AluraFake.task.dto.NewOpenTextTaskDTO;
 import br.com.alura.AluraFake.task.dto.NewSingleChoiceTaskDTO;
 import br.com.alura.AluraFake.task.dto.OptionDTO;
+import br.com.alura.AluraFake.task.repository.TaskRepository;
 import br.com.alura.AluraFake.util.BusinessException;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
