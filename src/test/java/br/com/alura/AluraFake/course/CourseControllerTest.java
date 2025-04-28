@@ -116,5 +116,16 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$[2].title").value("Spring"))
                 .andExpect(jsonPath("$[2].description").value("Curso de spring"));
     }
+    @Test
+    void publish_should_return_204() throws Exception {
+
+        doNothing().when(courseService).publishCourse(1L);
+
+        mockMvc.perform(post("/course/1/publish"))
+                .andExpect(status().isNoContent());   // 204
+
+        verify(courseService, times(1)).publishCourse(1L);
+    }
+
 
 }
