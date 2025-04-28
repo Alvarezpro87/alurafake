@@ -1,5 +1,7 @@
 package br.com.alura.AluraFake.course;
 
+import br.com.alura.AluraFake.course.repository.CourseRepository;
+import br.com.alura.AluraFake.course.service.CourseService;
 import br.com.alura.AluraFake.user.Role;
 import br.com.alura.AluraFake.user.User;
 import br.com.alura.AluraFake.user.UserRepository;
@@ -19,9 +21,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class CourseServiceTest {
 
-    @Autowired CourseRepository courseRepository;
+    @Autowired
+    CourseRepository courseRepository;
     @Autowired UserRepository   userRepository;
-    @Autowired CourseService    courseService;
+    @Autowired
+    CourseService courseService;
 
     private User instructor;
 

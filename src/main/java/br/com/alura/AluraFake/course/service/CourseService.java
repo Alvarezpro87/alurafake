@@ -1,5 +1,8 @@
-package br.com.alura.AluraFake.course;
+package br.com.alura.AluraFake.course.service;
 
+import br.com.alura.AluraFake.course.Course;
+import br.com.alura.AluraFake.course.Status;
+import br.com.alura.AluraFake.course.repository.CourseRepository;
 import br.com.alura.AluraFake.task.MultipleChoiceTask;
 import br.com.alura.AluraFake.task.OpenTextTask;
 import br.com.alura.AluraFake.task.SingleChoiceTask;

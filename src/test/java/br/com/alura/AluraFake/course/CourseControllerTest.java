@@ -1,5 +1,9 @@
 package br.com.alura.AluraFake.course;
 
+import br.com.alura.AluraFake.course.controller.CourseController;
+import br.com.alura.AluraFake.course.dto.NewCourseDTO;
+import br.com.alura.AluraFake.course.repository.CourseRepository;
+import br.com.alura.AluraFake.course.service.CourseService;
 import br.com.alura.AluraFake.user.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -29,8 +33,10 @@ class CourseControllerTest {
     @Autowired MockMvc          mockMvc;
 
     @MockBean UserRepository    userRepository;
-    @MockBean CourseRepository  courseRepository;
-    @MockBean CourseService    courseService;
+    @MockBean
+    CourseRepository courseRepository;
+    @MockBean
+    CourseService courseService;
     @Autowired ObjectMapper     objectMapper;
 
     @Test
