@@ -15,6 +15,7 @@ public class Option {
     @Column(name = "option_text", nullable = false, length = 80)
     private String option;
 
+    @Column(name = "is_correct", nullable = false)
     private boolean isCorrect;
 
     @ManyToOne(optional = false)
