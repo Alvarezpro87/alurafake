@@ -1,189 +1,231 @@
-# Case Tecnico Alura
-Seja bem-vindo ao teste para desenvolvedor Java Júnior da Alura. Neste
-desafio, simulamos uma parte do nosso domínio para que você possa demonstrar seus conhecimentos. 
-Não há respostas certas ou erradas, nosso objetivo é avaliar como você aplica lógica e 
-conceitos de orientação a objetos para solucionar problemas.
+# AluraFake API
 
-## Requisitos
+## Visão Geral
+Aplicação RESTful para gerenciamento de cursos e atividades interativas, desenvolvida em Java 18+, Spring Boot, Spring Data JPA e MySQL. Utiliza Flyway para versionamento de esquema e Spring Security (Basic Auth) para proteção de endpoints.
 
-- Utilizar java 18+
-- Utilizar Spring boot
-- Utilizar Spring data JPA
-- Utilizar mysql
-- utilizar criação de tabelas manuais ([flyway](https://www.baeldung.com/database-migrations-with-flyway))
+## Estrutura do Projeto
 
-## Orientações
+- **package br.com.alura.AluraFake.course**
+    - `Course` (entidade JPA)
+    - `Status` (enum: BUILDING, PUBLISHED)
+    - `CourseRepository` (Spring Data JPA)
+    - `CourseService` (lógica de negócio para publication)
+    - `CourseController` (endpoints `/course`)
+    - DTOs: `NewCourseDTO`, `CourseListItemDTO`, etc.
 
-1. Suba o templete incial do projeto no seu github e deixe o repositório público(Seus commits serão avaliados).
-2. Abra o projeto na IDE de sua preferência.
-3. requisitos estão em português, mas lembre-se de no código escrever tudo em inglês.
-4. bônus não é obrigatório e não possui ordem, então você pode realizar apenas um dos que
-   são citados lá, de acordo com sua preferência.
+- **package br.com.alura.AluraFake.user**
+    - `User` (entidade JPA)
+    - `Role` (enum: STUDENT, INSTRUCTOR)
+    - `UserRepository` (Spring Data JPA), etc.
 
-## Desafio
+- **package br.com.alura.AluraFake.task**
+    - `Task` (superclasse abstrata, herança por dtype)
+    - `OpenTextTask`, `SingleChoiceTask`, `MultipleChoiceTask` (subclasses)
+    - `Option` (entidade para alternativas)
+    - `TaskRepository`, `TaskService`, `TaskController`
+    - DTOs para criação de tasks: `NewOpenTextTaskDTO`, `NewSingleChoiceTaskDTO`, `NewMultipleChoiceTaskDTO`, etc.
 
-Já disponibilizamos um projeto base como ponto de partida, no qual as tecnologias exigidas já estão configuradas. 
-Algumas lógicas relacionadas às entidades usuário e curso já estão implementadas, 
-e podem ser utilizadas como orientação para a resolução das questões.
+- **package br.com.alura.AluraFake.infra**
+    - `DataSeeder` (popula dados iniciais em profile `dev`)
 
-**Importante:** Não se preocupe com a parte visual, toda a interação devem ser feitas
-por API.
+- **package br.com.alura.AluraFake.config**
+    - `SecurityConfig` (configuração Spring Security + OpenAPI/Swagger)
 
-### Questão 1 — Modelagem de Atividades
+- **Flyway migrations** em `src/main/resources/db/migration`:
+    - V1__create_user.sql
+    - V2__create_course.sql
+    - V3__create_tasks.sql
+    - V4__create_options.sql
 
-Na Alura, os cursos possuem **atividades interativas** que ajudam no processo de aprendizado.  
-Elas podem ser de diferentes formatos, cada uma com suas regras específicas.
+## Banco de Dados e Mapeamento
 
-Você deve implementar a modelagem dessas atividades, de acordo com os requisitos abaixo.  
-Os esboços dos endpoints já estão criados — sua tarefa será **implementar a lógica completa** para cada tipo de atividade.
+### Tabelas
 
-##### Regras gerais
-- O enunciado (`statement`) deve ter no mínimo 4 e no máximo 255 caracteres.
-- O curso não pode ter duas questões com o mesmo enunciado
-- A ordem deve ser um número inteiro positivo.
-- Um curso só pode receber atividades se seu status for `BULDING`.
+```sql
+-- Usuário\CREATE TABLE User (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  name VARCHAR(50) NOT NULL,
+  email VARCHAR(50) NOT NULL UNIQUE,
+  role ENUM('STUDENT', 'INSTRUCTOR') NOT NULL DEFAULT 'STUDENT',
+  password VARCHAR(20) NOT NULL
+);
 
-#### Tipos de atividade
+-- Curso
+CREATE TABLE Course (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  title VARCHAR(50) NOT NULL,
+  description VARCHAR(255) NOT NULL,
+  instructor_id BIGINT NOT NULL,
+  status ENUM('BUILDING','PUBLISHED') NOT NULL DEFAULT 'BUILDING',
+  publishedAt DATETIME NULL,
+  FOREIGN KEY (instructor_id) REFERENCES User(id) ON DELETE CASCADE
+);
 
-##### 1.1 — Atividade de Resposta Aberta
+-- Atividades (Tasks)
+CREATE TABLE tasks (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  statement VARCHAR(255) NOT NULL,
+  `order` INT NOT NULL,
+  course_id BIGINT NOT NULL,
+  type VARCHAR(20) NOT NULL,
+  dtype VARCHAR(31) NOT NULL,
+  UNIQUE (course_id, statement),
+  FOREIGN KEY (course_id) REFERENCES Course(id)
+);
 
-**Endpoint:** `/task/new/opentext`
-```bash
-curl -w "%{http_code}\n" -X POST http://localhost:8080/task/new/opentext \
-  -H "Content-Type: application/json" \
-  -d '{
-        "courseId": 42,
-        "statement": "O que aprendemos na aula de hoje?",
-        "order": 1
-      }'
- ```
+-- Opções (Options)
+CREATE TABLE options (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  option_text VARCHAR(80) NOT NULL,
+  is_correct BOOLEAN NOT NULL,
+  task_id BIGINT NOT NULL,
+  FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+);
+```  
 
-#### 1.2 — Atividade de alternativa única
+### Diagrama de Entidades
 
-**Endpoint:** `/task/new/singlechoice`
-```bash
-curl -w "%{http_code}\n" -X POST http://localhost:8080/task/new/singlechoice \
-  -H "Content-Type: application/json" \
-  -d '{
-        "courseId": 42,
-        "statement": "O que aprendemos hoje?",
-        "order": 2,
-        "options": [
-            {
-                "option": "Java",
-                "isCorrect": true
-            },
-            {
-                "option": "Python",
-                "isCorrect": false
-            },
-            {
-                "option": "Ruby",
-                "isCorrect": false
-            }
-        ]
-      }'
- ```
+Abaixo está o diagrama das tabelas e seus relacionamentos
 
-##### Regras
-- A atividade deve ter no minimo 2 e no máximo 5 alternativas.
-- A atividade deve ter uma única alternativa correta.
-- As alternativas devem ter no mínimo 4 e no máximo 80 caracteres.
-- As alternativas não podem ser iguais entre si.
-- As alternativas não podem ser iguais ao enunciado da atividade.
+```mermaid
+erDiagram
+    USER ||--o{ COURSE : instrui
+    COURSE ||--|{ TASK : possui
+    TASK ||--o{ OPTION : tem
 
-##### 1.3 — Atividade de múltipla escolha
-
-**Endpoint:** `/task/new/multiplechoice`
-```bash
-curl -w "%{http_code}\n" -X POST http://localhost:8080/task/new/singlechoice \
-  -H "Content-Type: application/json" \
-  -d '{
-        "courseId": 42,
-        "statement": "O que aprendemos hoje?",
-        "order": 2,
-        "options": [
-            {
-                "option": "Java",
-                "isCorrect": true
-            },
-            {
-                "option": "Spring",
-                "isCorrect": true
-            },
-            {
-                "option": "Ruby",
-                "isCorrect": false
-            }
-        ]
-      }'
- ```
-
-##### Regras
-- A atividade deve ter no minimo 3 e no máximo 5 alternativas.
-- A atividade deve ter duas ou mais alternativas corretas, e ao menos uma alternativa incorreta.
-- As alternativas devem ter no mínimo 4 e no máximo 80 caracteres.
-- As alternativas não podem ser iguais entre si.
-- As alternativas não podem ser iguais ao enunciado da atividade.
-
-#### 👉👉Importante👈👈
-Caso uma nova atividade seja adicionada a um curso com uma ordem que já está em uso, todas as atividades com aquela ordem ou superiores devem ser deslocadas uma posição para frente, garantindo que cada atividade tenha uma ordem única e sequencial.
-```
-Exemplo:
-Se o curso possui as seguintes atividades:
-Ordem 1 – Atividade A
-Ordem 2 – Atividade B
-Ordem 3 – Atividade C
-
-E for adicionada uma nova com ordem 2, a lista será reorganizada assim:
-
-Ordem 1 – Atividade A
-Ordem 2 – Nova Atividade
-Ordem 3 – Atividade B (foi deslocada)
-Ordem 4 – Atividade C (foi deslocada)
-
-Validação de sequência:
-A ordem das atividades deve ser contínua, sem saltos. Ou seja, 
-não é permitido adicionar uma atividade com ordem 4 se ainda não existem atividades com ordens 3 (ou anteriores).
-
-Exemplo inválido:
-Se o curso tem:
-
-Ordem 1 – Atividade A
-Ordem 2 – Atividade B
-
-E uma nova atividade tenta ser inserida com ordem 4, o sistema deve lançar um erro informando que a sequência está incorreta.
-
+    USER {
+        bigint id PK
+        datetime created_at
+        varchar name
+        varchar email
+        enum role
+        varchar password
+    }
+    COURSE {
+        bigint id PK
+        datetime created_at
+        varchar title
+        varchar description
+        bigint instructor_id FK
+        enum status
+        datetime published_at
+    }
+    TASK {
+        bigint id PK
+        varchar statement
+        int order
+        bigint course_id FK
+        varchar type
+        varchar dtype
+    }
+    OPTION {
+        bigint id PK
+        varchar option_text
+        boolean is_correct
+        bigint task_id FK
+    }
 ```
 
-### Questão 2 — Publicação de Cursos
+---
 
-Para publicar um curso, ele deve:
 
-- Conter ao menos uma atividade de cada tipo.
-- Ter atividades com `order` em sequência contínua (ex: 1, 2, 3...).
-- O curso só pode ser publicado se o status for `BUILDING`.
-- Ter o `status` atualizado para `PUBLISHED` e `publishedAt` com a data atual.
 
-Implemente o endpoint `/course/{id}/publish` validando essas regras antes da publicação.
 
-Exemplo de requisição:
-```bash
-curl -w "%{http_code}\n" -X POST http://localhost:8080/course/42/publish
+
+
+
+## Endpoints
+
+### Autenticação
+HTTP Basic Auth. Apenas usuários com **Role.INSTRUCTOR** podem criar ou publicar.
+
+#### Usuários iniciais (profile `dev`)
+- `caio@alura.com.br` / senha gerada (STUDENT)
+- `paulo@alura.com.br` / senha gerada (INSTRUCTOR)
+
+### Course
+
+| Método | Endpoint                  | Acesso       | Descrição                                                 |
+| ------ | ------------------------- | ------------ | --------------------------------------------------------- |
+| POST   | `/course/new`             | INSTRUCTOR   | Cria novo curso (`NewCourseDTO`).                         |
+| GET    | `/course/all`             | autenticado  | Lista todos os cursos (`CourseListItemDTO`).              |
+| POST   | `/course/{id}/publish`    | INSTRUCTOR   | Publica curso, valida regras e define `publishedAt`.     |
+
+**Exemplo criação**
+```json
+POST /course/new
+{
+  "title": "Java 18+",
+  "description": "Curso atualizado",
+  "emailInstructor": "paulo@alura.com.br"
+}
+-> 201 Created
 ```
 
-### Bônus (não obrigatório)
+**Publicação**
+```
+POST /course/42/publish -> 204 No Content
+```
 
-- Configure o Spring Security para proteger os endpoints de criação de atividades e criação/publicação de cursos. 
-  O acesso deve ser restrito a usuários com a role `INSTRUCTOR`, os demais endpoints de listagens podem ser acessados por qualquer usuário, desde que estejam autenticados.
+### Task
 
-## Considerações finais
+| Método | Endpoint                         | Acesso       | Descrição                                                           |
+| ------ | -------------------------------- | ------------ | ------------------------------------------------------------------- |
+| POST   | `/task/new/opentext`             | INSTRUCTOR   | Cria Open Text Task (`NewOpenTextTaskDTO`).                         |
+| POST   | `/task/new/singlechoice`        | INSTRUCTOR   | Cria Single Choice Task (`NewSingleChoiceTaskDTO`).                 |
+| POST   | `/task/new/multiplechoice`      | INSTRUCTOR   | Cria Multiple Choice Task (`NewMultipleChoiceTaskDTO`).             |
 
-- A avaliação do case será realizada exclusivamente com base nos requisitos e na forma como você utiliza **lógica**,
-**orientação a objetos** e **testes**. Qualquer tecnologia fora do escopo, como Swagger, Docker, ou aspectos visuais, 
-  não será considerada como um diferencial.
-- Testes são obrigatórios e serão avaliados como requisito.
-- Caso você tenha alguma dúvida sobre a descrição das questões, faça anotações no código e siga o que considerar mais adequado.
-- Outros candidatos estão concorrendo à mesma vaga, e códigos muito semelhantes resultarão na anulação do case.
-- Utilize ferramentas de IA, mas tenha cautela com o código gerado automaticamente. Caso avance para a próxima etapa, 
-a entrevista síncrona será baseada no código que você produziu.
+#### Exemplo Single Choice
+```json
+POST /task/new/singlechoice
+{
+  "courseId": 42,
+  "statement": "O que aprendemos?",
+  "order": 2,
+  "options": [
+    {"option": "Java", "isCorrect": true},
+    {"option": "Python", "isCorrect": false}
+  ]
+}
+-> 201 Created
+```
+
+## Regras de Validação
+
+1. **General**
+    - `statement`: mínimo 4, máximo 255 caracteres.
+    - Nenhuma duplicidade de `statement` por `courseId`.
+    - `order` positivo, sequência contínua sem saltos.
+    - `Course.status` deve ser BUILDING para aceitar novas tasks.
+
+2. **Single Choice**
+    - 2 ≤ número de opções ≤ 5.
+    - Exatamente 1 `isCorrect = true`.
+    - Cada `option_text`: 4–80 caracteres, distinto entre si e diferente de `statement`.
+
+3. **Multiple Choice**
+    - 3 ≤ número de opções ≤ 5.
+    - ≥2 `isCorrect = true` e pelo menos 1 `false`.
+    - Mesmas regras de tamanho e unicidade.
+
+4. **Inserção**
+    - Se `order` já existir, desloca tasks existentes para manter sequência.
+
+## Testes Automatizados
+
+- **Unit Tests** em `src/test/java` cobrindo:
+    - `UserRepositoryTest`, `PasswordGenerationTest`
+    - `CourseServiceTest`, `CourseControllerTest`
+    - `TaskServiceTest`, `TaskControllerTest`
+
+- **Integração** com banco de teste (`application-test.properties`) e Flyway.
+
+## Swagger / OpenAPI
+Acesse `http://localhost:8080/swagger-ui.html` para explorar a documentação interativa.
+
+---
+
+> Documentação criada para o Case Técnico Alura. Basta copiar este arquivo como `README.md` na raiz do projeto.
+
