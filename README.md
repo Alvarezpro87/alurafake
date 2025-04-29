@@ -32,56 +32,62 @@ Aplicação RESTful para gerenciamento de cursos e atividades interativas, desen
     - `SecurityConfig` (configuração Spring Security + OpenAPI/Swagger)
 
 - **Flyway migrations** em `src/main/resources/db/migration`:
-    - V1__create_user.sql
-    - V2__create_course.sql
-    - V3__create_tasks.sql
-    - V4__create_options.sql
+    - V1__createTableUser.sql
+    - V2__createTableCourse.sql
+    - V3__create_table_tasks.sql
+    - V4__create_table_options.sql
 
 ## Banco de Dados e Mapeamento
 
 ### Tabelas
 
 ```sql
--- Usuário\CREATE TABLE User (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  name VARCHAR(50) NOT NULL,
-  email VARCHAR(50) NOT NULL UNIQUE,
-  role ENUM('STUDENT', 'INSTRUCTOR') NOT NULL DEFAULT 'STUDENT',
-  password VARCHAR(20) NOT NULL
-);
+-- Usuário
+CREATE TABLE User(
+                     id bigint(20) NOT NULL AUTO_INCREMENT,
+                     createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                     name varchar(50) NOT NULL,
+                     email varchar(50) NOT NULL,
+                     role enum('STUDENT', 'INSTRUCTOR') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'STUDENT',
+                     password varchar(20) NOT NULL,
+                     PRIMARY KEY (id),
+                     CONSTRAINT UC_Email UNIQUE (email)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 -- Curso
 CREATE TABLE Course (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  title VARCHAR(50) NOT NULL,
-  description VARCHAR(255) NOT NULL,
-  instructor_id BIGINT NOT NULL,
-  status ENUM('BUILDING','PUBLISHED') NOT NULL DEFAULT 'BUILDING',
-  publishedAt DATETIME NULL,
-  FOREIGN KEY (instructor_id) REFERENCES User(id) ON DELETE CASCADE
-);
+                        id bigint(20) NOT NULL AUTO_INCREMENT,
+                        createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        title varchar(50) NOT NULL,
+                        description varchar(255) NOT NULL,
+                        instructor_id bigint(20) NOT NULL,
+                        status enum('BUILDING', 'PUBLISHED') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'BUILDING',
+                        publishedAt datetime DEFAULT NULL,
+                        PRIMARY KEY (id),
+                        CONSTRAINT FK_Author FOREIGN KEY (instructor_id) REFERENCES User(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 -- Atividades (Tasks)
 CREATE TABLE tasks (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  statement VARCHAR(255) NOT NULL,
-  `order` INT NOT NULL,
-  course_id BIGINT NOT NULL,
-  type VARCHAR(20) NOT NULL,
-  dtype VARCHAR(31) NOT NULL,
-  UNIQUE (course_id, statement),
-  FOREIGN KEY (course_id) REFERENCES Course(id)
+                       id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                       statement VARCHAR(255) NOT NULL,
+                       `order` INT NOT NULL,
+                       course_id BIGINT NOT NULL,
+                       type VARCHAR(20) NOT NULL,
+                       dtype VARCHAR(31) NOT NULL,
+                       CONSTRAINT fk_task_course FOREIGN KEY (course_id) REFERENCES Course(id),
+                       CONSTRAINT uk_task_statement UNIQUE (course_id, statement)
 );
 
 -- Opções (Options)
 CREATE TABLE options (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  option_text VARCHAR(80) NOT NULL,
-  is_correct BOOLEAN NOT NULL,
-  task_id BIGINT NOT NULL,
-  FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                         option_text VARCHAR(80) NOT NULL,
+                         is_correct BOOLEAN NOT NULL,
+                         task_id BIGINT NOT NULL,
+                         CONSTRAINT fk_option_task FOREIGN KEY (task_id)
+                             REFERENCES tasks(id)
+                             ON DELETE CASCADE
 );
 ```  
 
@@ -129,11 +135,6 @@ erDiagram
 ```
 
 ---
-
-
-
-
-
 
 
 ## Endpoints
